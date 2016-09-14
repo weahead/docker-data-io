@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -e
+
+echo "Pulling ${DATA_TAG}"
+
+DIGEST_PRE=$(docker images -q --no-trunc ${DATA_TAG})
+
+docker pull ${DATA_TAG}
+
+DIGEST_POST=$(docker images -q --no-trunc ${DATA_TAG})
+
+echo "Pull done."
+
+if [ "${DIGEST_PRE}" != "${DIGEST_POST}" ]; then
+  echo "New version of ${DATA_TAG} found. Exiting"
+  exit 1
+fi
+
+echo "Unpacking data..."
+
+tar -xzf /data.tar.gz -C /
+
+echo "Finished successfully!"

@@ -1,0 +1,23 @@
+#!/bin/sh
+
+set -e
+
+echo "Packing data..."
+
+tar -zcf /data.tar.gz -C /source .
+
+echo "Packing done."
+
+CID=$(cat /proc/1/cgroup | grep 'docker/' | tail -1 | sed 's/^.*\///' | cut -c 1-12)
+
+echo "Creating image..."
+
+docker commit ${CID} ${DATA_TAG}
+
+echo "Image creation done."
+
+echo "Pushing image..."
+
+docker push ${DATA_TAG}
+
+echo "Finished successfully."
