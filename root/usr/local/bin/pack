@@ -1,23 +1,36 @@
 #!/bin/sh
 
 set -e
-
-echo "Packing data..."
-
-tar -zcf /data.tar.gz -C /source .
-
-echo "Packing done."
+set -o pipefail
 
 CID=$(cat /proc/1/cgroup | grep 'docker/' | tail -1 | sed 's/^.*\///' | cut -c 1-12)
 
-echo "Creating image..."
+echo
+echo "Using image ID: ${CID}"
 
-docker commit ${CID} ${DATA_TAG}
+echo
+echo "Packing data..."
+tar -zcvf /data.tar.gz -C /source .
+echo "done."
 
-echo "Image creation done."
+echo
+echo -n "Creating image..."
+CID=$(docker run -d -it alpine:3.4 sh)
+docker cp /data.tar.gz ${CID}:/data.tar.gz
+COMMIT_RESULT=$(docker commit ${CID} ${DATA_TAG})
+docker kill ${CID} && docker rm ${CID}
+echo "done."
+echo ${COMMIT_RESULT}
 
-echo "Pushing image..."
+echo
+if [ -n "${NO_PUSH}" ]; then
+  echo "NO_PUSH is set, skipping push."
+else
+  echo -n "Pushing image..."
+  #PUSH_RESULT=$(docker push ${DATA_TAG})
+  echo "done."
+  echo ${PUSH_RESULT}
+fi
 
-docker push ${DATA_TAG}
-
+echo
 echo "Finished successfully."

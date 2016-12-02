@@ -4,4 +4,4 @@ MAINTAINER We ahead <docker@weahead.se>
 
 COPY root /
 
-ENTRYPOINT ["sh", "-c"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
