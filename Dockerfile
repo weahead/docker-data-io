@@ -1,4 +1,4 @@
-FROM docker:1.12.1
+FROM docker:1.12.3
 
 MAINTAINER We ahead <docker@weahead.se>
 
