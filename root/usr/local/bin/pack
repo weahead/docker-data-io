@@ -3,11 +3,6 @@
 set -e
 set -o pipefail
 
-CID=$(cat /proc/1/cgroup | grep 'docker/' | tail -1 | sed 's/^.*\///' | cut -c 1-12)
-
-echo
-echo "Using image ID: ${CID}"
-
 echo
 echo "Packing data..."
 tar -zcvf /data.tar.gz -C /source .
