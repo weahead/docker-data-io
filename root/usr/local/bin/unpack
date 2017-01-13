@@ -13,7 +13,7 @@ else
   echo "Pull done."
 fi
 
-if [ "${DIGEST_PRE}" != "${DIGEST_POST}" ]; then
+if [ -n "${DIGEST_PRE}" -a "${DIGEST_PRE}" != "${DIGEST_POST}" ]; then
   echo "New version of ${DATA_TAG} found. Data may not be what you expect."
   echo "Pre-pull digest: ${DIGEST_PRE}"
   echo "Post-pull digest: ${DIGEST_POST}"
