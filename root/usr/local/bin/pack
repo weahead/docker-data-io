@@ -22,7 +22,7 @@ if [ -n "${NO_PUSH}" ]; then
   echo "NO_PUSH is set, skipping push."
 else
   echo -n "Pushing image..."
-  #PUSH_RESULT=$(docker push ${DATA_TAG})
+  PUSH_RESULT=$(docker push ${DATA_TAG})
   echo "done."
   echo ${PUSH_RESULT}
 fi
