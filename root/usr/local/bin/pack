@@ -29,18 +29,18 @@ if [ -n "${NO_PUSH}" ]; then
   echo "NO_PUSH is set, skipping push."
 else
 
-  if [ -n "${REGISTRY_USERNAME}" -o -n "${REGISTRY_ACCESS_TOKEN}" ]; then
+  if [ -n "${REGISTRY_USERNAME}" -o -n "${REGISTRY_PASSWORD}" ]; then
     if [ -z "${REGISTRY_USERNAME}" ]; then
-      echo "Missing REGISTRY_USERNAME. It is required when REGISTRY_ACCESS_TOKEN is set."
+      echo "Missing REGISTRY_USERNAME. It is required when REGISTRY_PASSWORD is set."
       exit 1
     fi
-    if [ -z "${REGISTRY_ACCESS_TOKEN}" ]; then
-      echo "Missing REGISTRY_ACCESS_TOKEN. It is required when REGISTRY_USERNAME is set."
+    if [ -z "${REGISTRY_PASSWORD}" ]; then
+      echo "Missing REGISTRY_PASSWORD. It is required when REGISTRY_USERNAME is set."
       exit 1
     fi
 
     echo "Logging in to ${REGISTRY} with username ${REGISTRY_USERNAME}"
-    docker login ${REGISTRY} -u ${REGISTRY_USERNAME} -p ${REGISTRY_ACCESS_TOKEN}
+    docker login ${REGISTRY} -u ${REGISTRY_USERNAME} -p ${REGISTRY_PASSWORD}
   fi
 
   echo -n "Pushing image..."

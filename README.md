@@ -38,6 +38,11 @@ data:
   environment:
     # Name of the resulting image containing the data, this is what is pushed.
     DATA_TAG: registry.example.com/example:latest
+    # OR using a private registry:
+    REGISTRY: registry.example.com
+    REGISTRY_USERNAME: example
+    REGISTRY_PASSWORD: example 
+    DATA_TAG: example:latest
 
 data-import:
   extends:
