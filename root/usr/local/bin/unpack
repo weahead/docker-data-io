@@ -2,19 +2,40 @@
 
 set -e
 
+if [ -n "${REGISTRY}" ]; then
+  IMAGE="${REGISTRY}/${DATA_TAG}"
+else
+  IMAGE="${DATA_TAG}"
+fi
+
 echo
 if [ -n "${NO_PULL}" ]; then
   echo "NO_PULL is set. Skipping pull."
 else
-  echo "Pulling ${DATA_TAG}"
-  DIGEST_PRE=$(docker images -q --no-trunc ${DATA_TAG})
-  docker pull ${DATA_TAG}
-  DIGEST_POST=$(docker images -q --no-trunc ${DATA_TAG})
+
+  if [ -n "${REGISTRY_USERNAME}" -o -n "${REGISTRY_ACCESS_TOKEN}" ]; then
+    if [ -z "${REGISTRY_USERNAME}" ]; then
+      echo "Missing REGISTRY_USERNAME. It is required when REGISTRY_ACCESS_TOKEN is set."
+      exit 1
+    fi
+    if [ -z "${REGISTRY_ACCESS_TOKEN}" ]; then
+      echo "Missing REGISTRY_ACCESS_TOKEN. It is required when REGISTRY_USERNAME is set."
+      exit 1
+    fi
+
+    echo "Logging in to ${REGISTRY} with username ${REGISTRY_USERNAME}"
+    docker login ${REGISTRY} -u ${REGISTRY_USERNAME} -p ${REGISTRY_ACCESS_TOKEN}
+  fi
+
+  echo "Pulling ${IMAGE}"
+  DIGEST_PRE=$(docker images -q --no-trunc ${IMAGE})
+  docker pull ${IMAGE}
+  DIGEST_POST=$(docker images -q --no-trunc ${IMAGE})
   echo "Pull done."
 fi
 
 if [ -n "${DIGEST_PRE}" -a "${DIGEST_PRE}" != "${DIGEST_POST}" ]; then
-  echo "New version of ${DATA_TAG} found. Data may not be what you expect."
+  echo "New version of ${IMAGE} found. Data may not be what you expect."
   echo "Pre-pull digest: ${DIGEST_PRE}"
   echo "Post-pull digest: ${DIGEST_POST}"
   echo "Rerun if you are sure you want to use new data."
@@ -24,7 +45,7 @@ fi
 
 echo
 echo "Unpacking data"
-CID=$(docker run -d -it ${DATA_TAG} sh)
+CID=$(docker run -d -it ${IMAGE} sh)
 docker cp ${CID}:/data.tar.gz /data.tar.gz
 tar -xzf /data.tar.gz -C /
 docker kill ${CID} && docker rm ${CID}
