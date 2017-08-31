@@ -1,6 +1,6 @@
-FROM docker:1.12.3
+FROM docker:latest
 
-LABEL maintainer "We ahead <docker@weahead.se>"
+LABEL maintainer="We ahead <docker@weahead.se>"
 
 COPY root /
 

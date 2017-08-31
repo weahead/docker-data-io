@@ -1,3 +1,3 @@
 #!/bin/sh
 
-docker build -t weahead/data-io:dev .
+docker build --pull -t weahead/data-io:dev .
