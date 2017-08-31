@@ -2,6 +2,14 @@
 
 set -e
 
+if [ -d /run/secrets ]; then
+  for file in /run/secrets/*; do
+    VARNAME=$(basename ${file})
+    VARVALUE=$(cat ${file})
+    export "${VARNAME}"="${VARVALUE}"
+  done
+fi
+
 if [ -z "${DATA_TAG}" ]; then
   echo "Required environment variable DATA_TAG not set."
   echo "You probably want to set it to something like \"registry.weahead.se/<name>-data:latest\""
