@@ -1,53 +1,27 @@
 #!/bin/sh
 
 set -e
-set -o pipefail
 
-if [ -n "${REGISTRY}" ]; then
-  IMAGE="${REGISTRY}/${DATA_TAG}"
-else
-  IMAGE="${DATA_TAG}"
-fi
-
+SRC="/data.tar.gz"
 
 echo
 echo "Packing data..."
-tar -zcf /data.tar.gz -C /source .
+tar -zcf "${SRC}" -C /source .
 echo "done."
 
-echo
-echo -n "Creating image..."
-CID=$(docker run -d -it alpine:3.4 sh)
-docker cp /data.tar.gz ${CID}:/data.tar.gz
-COMMIT_RESULT=$(docker commit ${CID} ${IMAGE})
-docker kill ${CID} && docker rm ${CID}
-echo "done."
-echo ${COMMIT_RESULT}
-
-echo
-if [ -n "${NO_PUSH}" ]; then
-  echo "NO_PUSH is set, skipping push."
+if [ -n "${DATA_TAG}" ]; then
+  data-io-registry pack "${SRC}"
+elif [ -n "${DATA_S3_DST}" ]; then
+  data-io-s3 pack "${SRC}"
 else
-
-  if [ -n "${REGISTRY_USERNAME}" -o -n "${REGISTRY_PASSWORD}" ]; then
-    if [ -z "${REGISTRY_USERNAME}" ]; then
-      echo "Missing REGISTRY_USERNAME. It is required when REGISTRY_PASSWORD is set."
-      exit 1
-    fi
-    if [ -z "${REGISTRY_PASSWORD}" ]; then
-      echo "Missing REGISTRY_PASSWORD. It is required when REGISTRY_USERNAME is set."
-      exit 1
-    fi
-
-    echo "Logging in to ${REGISTRY} with username ${REGISTRY_USERNAME}"
-    docker login ${REGISTRY} -u ${REGISTRY_USERNAME} -p ${REGISTRY_PASSWORD}
-  fi
-
-  echo -n "Pushing image..."
-  PUSH_RESULT=$(docker push ${IMAGE})
-  echo "done."
-  echo ${PUSH_RESULT}
+  echo
+  echo "Nowhere to send the packed data?"
 fi
 
-echo
-echo "Finished successfully."
+if [ $? = 0 ]; then
+  echo
+  echo "Finished successfully."
+else
+  echo "Unable to finish successfully."
+  exit 1
+fi

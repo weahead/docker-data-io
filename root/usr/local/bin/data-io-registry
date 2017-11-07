@@ -1,0 +1,132 @@
+#!/bin/sh
+
+set -e
+set -o pipefail
+
+pushImage () {
+  IMAGE="${1}"
+
+  echo
+  echo "Pushing image..."
+  PUSH_RESULT=$(docker push "${IMAGE}")
+  echo "done."
+  echo "${PUSH_RESULT}"
+}
+
+pullImage () {
+  IMAGE="${1}"
+
+  echo
+  echo "Pulling ${IMAGE}"
+  DIGEST_PRE=$(docker images -q --no-trunc "${IMAGE}")
+  docker pull "${IMAGE}"
+  DIGEST_POST=$(docker images -q --no-trunc "${IMAGE}")
+  echo "Pull done."
+
+  if [ -n "${DIGEST_PRE}" ] && [ "${DIGEST_PRE}" != "${DIGEST_POST}" ]; then
+    echo "New version of ${IMAGE} found. Data may not be what you expect."
+    echo "Pre-pull digest: ${DIGEST_PRE}"
+    echo "Post-pull digest: ${DIGEST_POST}"
+    echo "Rerun if you are sure you want to use new data."
+    echo "Exiting."
+    exit 1
+  fi
+}
+
+createImage () {
+  SRC="${1}"
+  IMAGE="${2}"
+
+  echo
+  echo "Creating image..."
+  CID=$(docker create alpine:3.6)
+  docker cp "${SRC}" "${CID}":"${SRC}"
+  COMMIT_RESULT=$(docker commit "${CID}" "${IMAGE}")
+  docker rm "${CID}"
+  echo "done."
+  echo "${COMMIT_RESULT}"
+}
+
+dockerLogin () {
+  if [ -n "${REGISTRY_USERNAME}" ] || [ -n "${REGISTRY_PASSWORD}" ]; then
+    if [ -z "${REGISTRY_USERNAME}" ]; then
+      echo "Missing environment variable REGISTRY_USERNAME."
+      echo "It is required when environment variable REGISTRY_PASSWORD is set."
+      echo "Set environment variable NO_PUSH if you do not want to push the resulting image to the registry."
+      exit 1
+    fi
+
+    if [ -z "${REGISTRY_PASSWORD}" ]; then
+      echo "Missing environment variable REGISTRY_PASSWORD."
+      echo "It is required when environment variable REGISTRY_USERNAME is set."
+      echo "Set environment variable NO_PUSH if you do not want to push the resulting image to the registry."
+      exit 1
+    fi
+
+    echo "Logging in to ${REGISTRY} with username ${REGISTRY_USERNAME}"
+    if docker login "${REGISTRY}" -u "${REGISTRY_USERNAME}" -p "${REGISTRY_PASSWORD}"; then
+      return 0
+    else
+      ERR=$?
+      echo "Unable to login. See errors above."
+      return ${ERR}
+    fi
+  else
+    return 0
+  fi
+}
+
+unpack () {
+  SRC=${1}
+  IMAGE=${2}
+  NO_PULL=${3}
+
+  if [ -z "${NO_PULL}" ]; then
+    if dockerLogin; then
+      pullImage "${IMAGE}"
+      echo
+      echo "Extracting data from ${IMAGE}"
+      CID=$(docker create "${IMAGE}")
+      docker cp "${CID}":"${SRC}" "${SRC}"
+      docker rm "${CID}"
+      echo "done."
+    fi
+  else
+    echo
+    echo "NO_PULL is set. Skipping pull."
+  fi
+}
+
+pack () {
+  SRC=${1}
+  IMAGE=${2}
+  NO_PUSH=${3}
+
+  createImage "${SRC}" "${IMAGE}"
+
+  if [ -z "${NO_PUSH}" ]; then
+    if dockerLogin; then
+      pushImage "${IMAGE}"
+    else
+      exit $?
+    fi
+  else
+    echo
+    echo "NO_PUSH is set, skipping push."
+  fi
+}
+
+CMD="${1}"
+SRC="${2}"
+
+if [ -n "${REGISTRY}" ]; then
+  IMAGE="${REGISTRY}/${DATA_TAG}"
+else
+  IMAGE="${DATA_TAG}"
+fi
+
+if [ "${CMD}" = "pack" ]; then
+  pack "${SRC}" "${IMAGE}" "${NO_PUSH}"
+elif [ "${CMD}" = "unpack" ]; then
+  unpack "${SRC}" "${IMAGE}" "${NO_PULL}"
+fi
