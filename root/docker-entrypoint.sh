@@ -24,4 +24,10 @@ if [ -n "${DATA_TAG}" ] && [ ! -S /var/run/docker.sock ]; then
   exit 1
 fi
 
-exec $1
+if [ -z "${1}" ]; then
+  echo "A command was not given."
+  echo "Exiting"
+  exit 1
+fi
+
+exec "${1}"
