@@ -119,9 +119,6 @@ Docker Compose example:
 data:
   # Use the latest and greatest
   image: weahead/data-io:latest
-  volumes:
-    # We need access to Docker inside the container.
-    - /var/run/docker.sock:/var/run/docker.sock
   environment:
     # Name of the resulting file on Amazon S3, this is what is uploaded or downloaded
     DATA_S3_DST: s3://bucket-name/path/to/file.tar.gz
