@@ -2,53 +2,20 @@
 
 set -e
 
-if [ -n "${REGISTRY}" ]; then
-  IMAGE="${REGISTRY}/${DATA_TAG}"
+SRC="/data.tar.gz"
+
+if [ -n "${DATA_TAG}" ]; then
+  data-io-registry unpack "${SRC}"
+elif [ -n "${DATA_S3_DST}" ]; then
+  data-io-s3 unpack "${SRC}"
 else
-  IMAGE="${DATA_TAG}"
-fi
-
-echo
-if [ -n "${NO_PULL}" ]; then
-  echo "NO_PULL is set. Skipping pull."
-else
-
-  if [ -n "${REGISTRY_USERNAME}" -o -n "${REGISTRY_PASSWORD}" ]; then
-    if [ -z "${REGISTRY_USERNAME}" ]; then
-      echo "Missing REGISTRY_USERNAME. It is required when REGISTRY_PASSWORD is set."
-      exit 1
-    fi
-    if [ -z "${REGISTRY_PASSWORD}" ]; then
-      echo "Missing REGISTRY_PASSWORD. It is required when REGISTRY_USERNAME is set."
-      exit 1
-    fi
-
-    echo "Logging in to ${REGISTRY} with username ${REGISTRY_USERNAME}"
-    docker login ${REGISTRY} -u ${REGISTRY_USERNAME} -p ${REGISTRY_PASSWORD}
-  fi
-
-  echo "Pulling ${IMAGE}"
-  DIGEST_PRE=$(docker images -q --no-trunc ${IMAGE})
-  docker pull ${IMAGE}
-  DIGEST_POST=$(docker images -q --no-trunc ${IMAGE})
-  echo "Pull done."
-fi
-
-if [ -n "${DIGEST_PRE}" -a "${DIGEST_PRE}" != "${DIGEST_POST}" ]; then
-  echo "New version of ${IMAGE} found. Data may not be what you expect."
-  echo "Pre-pull digest: ${DIGEST_PRE}"
-  echo "Post-pull digest: ${DIGEST_POST}"
-  echo "Rerun if you are sure you want to use new data."
-  echo "Exiting."
-  exit 1
+  echo
+  echo "Nowhere to send the packed data?"
 fi
 
 echo
 echo "Unpacking data"
-CID=$(docker run -d -it ${IMAGE} sh)
-docker cp ${CID}:/data.tar.gz /data.tar.gz
 tar -xzf /data.tar.gz -C /
-docker kill ${CID} && docker rm ${CID}
 echo "done."
 
 echo
