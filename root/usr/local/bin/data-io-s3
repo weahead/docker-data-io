@@ -1,0 +1,73 @@
+#!/bin/sh
+
+set -e
+
+check_env () {
+  ENV_VALUE=$(eval "echo \$${1}")
+
+  if [ -z "${ENV_VALUE}" ]; then
+    echo
+    echo "Error: Environment variable '${1}' not set."
+    echo "Aborting!"
+    exit 1
+  fi
+}
+
+unpack () {
+  SRC="${1}"
+  DST="${2}"
+
+  echo
+  echo "Starting download of compressed data from S3:"
+  echo "  ${DST}"
+  echo
+
+  if aws s3 cp "${DST}" "${SRC}"; then
+    echo
+    echo "done."
+    exit 0
+  else
+    ERR=$?
+    echo
+    echo "Something went wrong. Check errors above for more information."
+    exit ${ERR}
+  fi
+}
+
+pack () {
+  SRC="${1}"
+  DST="${2}"
+
+  echo
+  echo "Starting upload of compressed data to S3:"
+  echo "  ${DST}"
+  echo
+
+  if aws s3 cp "${SRC}" "${DST}"; then
+    echo
+    echo "done."
+    exit 0
+  else
+    ERR=$?
+    echo
+    echo "Something went wrong. Check errors above for more information."
+    exit ${ERR}
+  fi
+}
+
+check_env AWS_ACCESS_KEY_ID
+check_env AWS_SECRET_ACCESS_KEY
+
+CMD="${1}"
+SRC="${2}"
+EXTENSION=${SRC##*.}
+DST_FILE=$(basename "${DATA_S3_DST}" "${EXTENSION}")
+DST_DIR=$(dirname "${DATA_S3_DST}")
+DATE_STAMP=$(date +"%Y-%d-%m_%H-%M-%S")
+DST="${DST_DIR}/${DST_FILE}-${DATE_STAMP}.${EXTENSION}"
+
+if [ "${CMD}" = "pack" ]; then
+  pack "${SRC}" "${DST}"
+elif [ "${CMD}" = "unpack" ]; then
+  unpack "${SRC}" "${DATA_S3_DST}"
+fi
