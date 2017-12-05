@@ -1,8 +1,8 @@
-FROM docker:latest
+FROM docker:17.11.0-ce
 
 LABEL maintainer="We ahead <docker@weahead.se>"
 
-ENV AWS_CLI_VERSION=1.11.182\
+ENV AWS_CLI_VERSION=1.14.3\
 		PYTHONIOENCODING=UTF-8\
 		PAGER=cat
 
