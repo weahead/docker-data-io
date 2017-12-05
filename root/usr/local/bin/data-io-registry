@@ -84,17 +84,20 @@ unpack () {
   if [ -z "${NO_PULL}" ]; then
     if dockerLogin; then
       pullImage "${IMAGE}"
-      echo
-      echo "Extracting data from ${IMAGE}"
-      CID=$(docker create "${IMAGE}")
-      docker cp "${CID}":"${SRC}" "${SRC}"
-      docker rm "${CID}"
-      echo "done."
+    else
+      exit $?
     fi
   else
     echo
     echo "NO_PULL is set. Skipping pull."
   fi
+
+  echo
+  echo "Extracting data from ${IMAGE}"
+  CID=$(docker create "${IMAGE}")
+  docker cp "${CID}":"${SRC}" "${SRC}"
+  docker rm "${CID}"
+  echo "done."
 }
 
 pack () {
