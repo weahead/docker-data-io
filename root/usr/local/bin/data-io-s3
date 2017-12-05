@@ -63,7 +63,7 @@ SRC="${2}"
 EXTENSION=${SRC##*.}
 DST_FILE=$(basename "${DATA_S3_DST}" "${EXTENSION}")
 DST_DIR=$(dirname "${DATA_S3_DST}")
-DATE_STAMP=$(date +"%Y-%d-%m_%H-%M-%S")
+DATE_STAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 DST="${DST_DIR}/${DST_FILE}-${DATE_STAMP}.${EXTENSION}"
 
 if [ "${CMD}" = "pack" ]; then
