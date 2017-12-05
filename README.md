@@ -98,7 +98,7 @@ data-export:
 
 - Export of data:
   1. Creates a compressed tar ball of the `/source` directory inside its own container.
-  2. Adds a date stamp of `%Y-%d-%m_%H-%M-%S` to the compressed tar balls file name.
+  2. Adds a date stamp of `%Y-%m-%d_%H-%M-%S` to the compressed tar balls file name.
   3. Uploads the renamed tar ball to AWS S3 with [`aws-cli`](https://github.com/aws/aws-cli).
 
 - Import of data:
