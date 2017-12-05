@@ -1,4 +1,4 @@
-FROM docker:latest
+FROM docker:17.11.0-ce
 
 LABEL maintainer="We ahead <docker@weahead.se>"
 
