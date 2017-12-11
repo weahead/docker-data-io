@@ -2,6 +2,10 @@
 
 set -e
 
+BIN_DIR=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+
+. "${BIN_DIR}/../libexec/utils"
+
 SRC="/data.tar.gz"
 
 if [ -n "${DATA_TAG}" ]; then
@@ -9,14 +13,11 @@ if [ -n "${DATA_TAG}" ]; then
 elif [ -n "${DATA_S3_DST}" ]; then
   data-io-s3 unpack "${SRC}"
 else
-  echo
-  echo "Nowhere to send the packed data?"
+  warn "Nowhere to send the packed data?"
 fi
 
-echo
-echo "Unpacking data"
+info "Unpacking data"
 tar -xzf /data.tar.gz -C /
-echo "done."
+info "done."
 
-echo
-echo "Finished successfully!"
+success
