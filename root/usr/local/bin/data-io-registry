@@ -25,7 +25,7 @@ pullImage () {
   DIGEST_POST=$(docker images -q --no-trunc "${IMAGE}")
   info "Pull done."
 
-  if [ -n "${DIGEST_PRE}" ] && [ "${DIGEST_PRE}" != "${DIGEST_POST}" ]; then
+  if [ "$(ls -A /var/lib/mysql)" ] && [ -n "${DIGEST_PRE}" ] && [ "${DIGEST_PRE}" != "${DIGEST_POST}" ]; then
     warn "New version of ${IMAGE} found. Data may not be what you expect."
     info "Pre-pull digest: ${DIGEST_PRE}
 Post-pull digest: ${DIGEST_POST}"
