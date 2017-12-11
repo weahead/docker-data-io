@@ -2,26 +2,26 @@
 
 set -e
 
+BIN_DIR=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+
+. "${BIN_DIR}/../libexec/utils"
+
 SRC="/data.tar.gz"
 
-echo
-echo "Packing data..."
+info "Packing data..."
 tar -zcf "${SRC}" -C /source .
-echo "done."
+info "done."
 
 if [ -n "${DATA_TAG}" ]; then
   data-io-registry pack "${SRC}"
 elif [ -n "${DATA_S3_DST}" ]; then
   data-io-s3 pack "${SRC}"
 else
-  echo
-  echo "Nowhere to send the packed data?"
+  warn "Nowhere to send the packed data?"
 fi
 
 if [ $? = 0 ]; then
-  echo
-  echo "Finished successfully."
+  success
 else
-  echo "Unable to finish successfully."
-  exit 1
+  abort "Unable to finish successfully."
 fi

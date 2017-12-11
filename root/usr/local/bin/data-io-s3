@@ -2,14 +2,15 @@
 
 set -e
 
+BIN_DIR=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+
+. "${BIN_DIR}/../libexec/utils"
+
 check_env () {
   ENV_VALUE=$(eval "echo \$${1}")
 
   if [ -z "${ENV_VALUE}" ]; then
-    echo
-    echo "Error: Environment variable '${1}' not set."
-    echo "Aborting!"
-    exit 1
+    abort "Error: Environment variable '${1}' not set."
   fi
 }
 
@@ -17,19 +18,15 @@ unpack () {
   SRC="${1}"
   DST="${2}"
 
-  echo
-  echo "Starting download of compressed data from S3:"
-  echo "  ${DST}"
-  echo
+  info "Starting download of compressed data from S3:
+${DST}"
 
   if aws s3 cp "${DST}" "${SRC}"; then
-    echo
-    echo "done."
+    success
     exit 0
   else
     ERR=$?
-    echo
-    echo "Something went wrong. Check errors above for more information."
+    err "Something went wrong. Check errors above for more information."
     exit ${ERR}
   fi
 }
@@ -38,19 +35,15 @@ pack () {
   SRC="${1}"
   DST="${2}"
 
-  echo
-  echo "Starting upload of compressed data to S3:"
-  echo "  ${DST}"
-  echo
+  info "Starting upload of compressed data to S3:
+${DST}"
 
   if aws s3 cp "${SRC}" "${DST}"; then
-    echo
-    echo "done."
+    success
     exit 0
   else
     ERR=$?
-    echo
-    echo "Something went wrong. Check errors above for more information."
+    err "Something went wrong. Check errors above for more information."
     exit ${ERR}
   fi
 }

@@ -1,0 +1,49 @@
+#!/bin/sh
+
+COLOR_BLACK='\033[30m'
+COLOR_RED='\033[31m'
+COLOR_GREEN='\033[32m'
+COLOR_YELLOW='\033[33m'
+COLOR_BLUE='\033[34m'
+COLOR_MAGENTA='\033[35m'
+COLOR_CYAN='\033[36m'
+COLOR_LIGHT_GRAY='\033[37m'
+COLOR_DARK_GRAY='\033[38m'
+COLOR_NORMAL='\033[39m'
+
+abort () {
+  if [ -n "${1}" ]; then
+    err "${1}"
+  else
+    err "Aborting."
+  fi
+  exit 1
+}
+
+err () {
+  echo -e "${COLOR_RED}"
+  echo "${1}"
+  echo -e "${COLOR_NORMAL}"
+}
+
+warn () {
+  echo -e "${COLOR_YELLOW}"
+  echo "${1}"
+  echo -e "${COLOR_NORMAL}"
+}
+
+info () {
+  echo -e "${COLOR_BLUE}"
+  echo "${1}"
+  echo -e "${COLOR_NORMAL}"
+}
+
+success () {
+  echo -e "${COLOR_GREEN}"
+  if [ -n "${1}" ]; then
+    echo "${1}"
+  else
+    echo "Finished successfully"
+  fi
+  echo -e "${COLOR_NORMAL}"
+}

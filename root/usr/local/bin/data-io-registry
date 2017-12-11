@@ -3,33 +3,33 @@
 set -e
 set -o pipefail
 
+BIN_DIR=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+
+. "${BIN_DIR}/../libexec/utils"
+
 pushImage () {
   IMAGE="${1}"
 
-  echo
-  echo "Pushing image..."
+  info "Pushing image..."
   PUSH_RESULT=$(docker push "${IMAGE}")
-  echo "done."
+  info "done."
   echo "${PUSH_RESULT}"
 }
 
 pullImage () {
   IMAGE="${1}"
 
-  echo
-  echo "Pulling ${IMAGE}"
+  info "Pulling ${IMAGE}"
   DIGEST_PRE=$(docker images -q --no-trunc "${IMAGE}")
   docker pull "${IMAGE}"
   DIGEST_POST=$(docker images -q --no-trunc "${IMAGE}")
-  echo "Pull done."
+  info "Pull done."
 
   if [ -n "${DIGEST_PRE}" ] && [ "${DIGEST_PRE}" != "${DIGEST_POST}" ]; then
-    echo "New version of ${IMAGE} found. Data may not be what you expect."
-    echo "Pre-pull digest: ${DIGEST_PRE}"
-    echo "Post-pull digest: ${DIGEST_POST}"
-    echo "Rerun if you are sure you want to use new data."
-    echo "Exiting."
-    exit 1
+    warn "New version of ${IMAGE} found. Data may not be what you expect."
+    info "Pre-pull digest: ${DIGEST_PRE}
+Post-pull digest: ${DIGEST_POST}"
+    abort "Rerun if you are sure you want to use new data."
   fi
 }
 
@@ -37,38 +37,35 @@ createImage () {
   SRC="${1}"
   IMAGE="${2}"
 
-  echo
-  echo "Creating image..."
+  info "Creating image..."
   CID=$(docker create alpine:3.6)
   docker cp "${SRC}" "${CID}":"${SRC}"
   COMMIT_RESULT=$(docker commit "${CID}" "${IMAGE}")
   docker rm "${CID}"
-  echo "done."
+  info "done."
   echo "${COMMIT_RESULT}"
 }
 
 dockerLogin () {
   if [ -n "${REGISTRY_USERNAME}" ] || [ -n "${REGISTRY_PASSWORD}" ]; then
     if [ -z "${REGISTRY_USERNAME}" ]; then
-      echo "Missing environment variable REGISTRY_USERNAME."
-      echo "It is required when environment variable REGISTRY_PASSWORD is set."
-      echo "Set environment variable NO_PUSH if you do not want to push the resulting image to the registry."
-      exit 1
+      abort "Missing environment variable REGISTRY_USERNAME.
+It is required when environment variable REGISTRY_PASSWORD is set.
+Set environment variable NO_PUSH if you do not want to push the resulting image to the registry."
     fi
 
     if [ -z "${REGISTRY_PASSWORD}" ]; then
-      echo "Missing environment variable REGISTRY_PASSWORD."
-      echo "It is required when environment variable REGISTRY_USERNAME is set."
-      echo "Set environment variable NO_PUSH if you do not want to push the resulting image to the registry."
-      exit 1
+      abort "Missing environment variable REGISTRY_PASSWORD.
+It is required when environment variable REGISTRY_USERNAME is set.
+Set environment variable NO_PUSH if you do not want to push the resulting image to the registry."
     fi
 
-    echo "Logging in to ${REGISTRY} with username ${REGISTRY_USERNAME}"
+    info "Logging in to ${REGISTRY} with username ${REGISTRY_USERNAME}"
     if docker login "${REGISTRY}" -u "${REGISTRY_USERNAME}" -p "${REGISTRY_PASSWORD}"; then
       return 0
     else
       ERR=$?
-      echo "Unable to login. See errors above."
+      err "Unable to login. See errors above."
       return ${ERR}
     fi
   else
@@ -88,16 +85,14 @@ unpack () {
       exit $?
     fi
   else
-    echo
-    echo "NO_PULL is set. Skipping pull."
+    info "NO_PULL is set. Skipping pull."
   fi
 
-  echo
-  echo "Extracting data from ${IMAGE}"
+  info "Extracting data from ${IMAGE}"
   CID=$(docker create "${IMAGE}")
   docker cp "${CID}":"${SRC}" "${SRC}"
   docker rm "${CID}"
-  echo "done."
+  info "done."
 }
 
 pack () {
@@ -114,8 +109,7 @@ pack () {
       exit $?
     fi
   else
-    echo
-    echo "NO_PUSH is set, skipping push."
+    info "NO_PUSH is set, skipping push."
   fi
 }
 
